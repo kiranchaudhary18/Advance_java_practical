@@ -62,10 +62,13 @@ pipeline {
         stage('Run Application') {
             steps {
                 dir('DevOOPS/to-do') {
-                    echo 'Starting the Spring Boot application locally...'
-                    // Running in background so the pipeline can finish
-                    sh 'nohup ./mvnw spring-boot:run > app.log 2>&1 &'
-                    echo 'Application started in background!'
+                    echo 'Starting the Spring Boot application on EC2...'
+                    // First, stop any existing running application on port 8082
+                    sh 'fuser -k 8082/tcp || true'
+                    
+                    // Run the packaged JAR in the background and prevent Jenkins from waiting/killing it
+                    sh 'JENKINS_NODE_COOKIE=dontKillMe nohup java -jar target/to-do-0.0.1-SNAPSHOT.jar > app.log 2>&1 &'
+                    echo 'Application started in background! Pipeline will now finish.'
                 }
             }
         }
