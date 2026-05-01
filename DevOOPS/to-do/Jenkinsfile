@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    tools {
+        // Assuming you have Maven configured in Jenkins under Global Tool Configuration as 'Maven 3'
+        maven 'Maven 3'
+        // Assuming you have JDK configured in Jenkins under Global Tool Configuration as 'JDK 21' (or whatever your version is)
+        jdk 'JDK 21' 
+    }
+
+    stages {
+        stage('Checkout from GitHub') {
+            steps {
+                echo 'Checking out the project from GitHub...'
+                // Using the root repository URL.
+                git branch: 'main', url: 'https://github.com/ArjunDivraniya/Sem-4-Paractical.git'
+                echo 'GitHub Checkout completed successfully!'
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                dir('DevOOPS/to-do') {
+                    echo 'Cleaning up the workspace...'
+                    // Using maven wrapper if available, else mvn
+                    bat 'mvnw.cmd clean'
+                    echo 'Workspace is clean!'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('DevOOPS/to-do') {
+                    echo 'Compiling the application...'
+                    bat 'mvnw.cmd compile'
+                    echo 'Build completed successfully!'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('DevOOPS/to-do') {
+                    echo 'Running unit tests...'
+                    bat 'mvnw.cmd test'
+                    echo 'All tests passed successfully!'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                dir('DevOOPS/to-do') {
+                    echo 'Packaging the application into a JAR file...'
+                    bat 'mvnw.cmd package -DskipTests'
+                    echo 'Packaging completed successfully!'
+                }
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                dir('DevOOPS/to-do') {
+                    echo 'Starting the Spring Boot application locally...'
+                    // Running in background so the pipeline can finish or continue.
+                    // Note: For a real deployment, you'd deploy the JAR to a server.
+                    bat 'start mvnw.cmd spring-boot:run'
+                    echo 'Application started!'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution finished.'
+        }
+        success {
+            echo 'SUCCESS: The Spring Boot To-Do application built successfully.'
+        }
+        failure {
+            echo 'FAILED: The build failed. Please check the logs.'
+        }
+    }
+}
